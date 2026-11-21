@@ -290,13 +290,13 @@ function formatLuau(src) {
  for (let idx=0; idx<lines.length; idx++) {
   const current=lines[idx];
   const previous=spaced.length ? spaced[spaced.length-1] : '';
-  const topLevel = !/^\\s/.test(current);
-  const startsBlock = /^(local\\s+(function|[A-Za-z_])|function\\s|if\\s|for\\s|while\\s|repeat\\b)/.test(current);
+  const topLevel = !/^\s/.test(current);
+  const startsBlock = /^(local\s+(function|[A-Za-z_])|function\s|if\s|for\s|while\s|repeat\b)/.test(current);
   const afterTopEnd = previous === 'end' || previous === 'until' || previous.endsWith('end');
   if (topLevel && spaced.length && (startsBlock || afterTopEnd) && previous !== '') spaced.push('');
   spaced.push(current);
  }
- return spaced.join('\\n').replace(/\\n{3,}/g,'\\n\\n');
+ return spaced.join('\\n').replace(/\n{3,}/g,'\n\n');
 }
 
 // Best-effort deobfuscator V4: membuka pola yang dikenali dan tetap
@@ -358,7 +358,8 @@ function deobfuscateLuau(src) {
  for (const re of aliasPatterns) while ((m=re.exec(output))!==null) aliases.add(m[1]);
 
  // Dekode string.char(angka, ...) dan alias char yang argumennya literal byte.
- const charNames=['string\\s*\\.\\s*char',...Array.from(aliases).map(x=>x.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&'))];
+ const escapeRegExp = value => value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+ const charNames=['string\\s*\\.\\s*char',...Array.from(aliases).map(escapeRegExp)];
  for (const name of charNames) {
   const re=new RegExp('(?:'+name+')\\s*\\(\\s*(\\d+(?:\\s*,\\s*\\d+)*)\\s*\\)','g');
   output=output.replace(re,(whole,nums)=>{
