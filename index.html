@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DUTZ STUDIO V4 — Luau Obfuscator</title>
+<title>DUTZ STUDIO V3 — Luau Obfuscator</title>
 <style>
 :root{color-scheme:dark;--bg:#09090d;--panel:#15151f;--line:#303044;--muted:#aaaabe;--white:#f5f5fa;--accent:#8b5cf6}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#292044 0,transparent 48%),var(--bg);color:var(--white);font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif}
@@ -19,7 +19,7 @@ textarea{width:100%;min-height:330px;resize:vertical;background:#090910;border:1
 <div class="wrap">
 <header class="brand">
  <h1>DUTZ STUDIO</h1>
- <p>LUAU SCRIPT TOOL • V4</p>
+ <p>LUAU SCRIPT TOOL • V3</p>
 </header>
 <div class="grid">
  <section class="panel">
@@ -36,7 +36,7 @@ textarea{width:100%;min-height:330px;resize:vertical;background:#090910;border:1
  </section>
  <section class="panel">
   <h2>02 / OUTPUT LUAU</h2>
-  <p class="hint">DEOBFUSCATOR V4: mencoba membuka wrapper dan encoding yang dikenali, lalu memformat hasil menjadi source Luau yang rapi seperti contoh. VM/enkripsi khusus mungkin hanya terbaca sebagian.</p>
+  <p class="hint">Deobfuscator mencoba membuka pola umum dari berbagai format. Hasil tidak dijamin lengkap untuk semua obfuscator.</p>
   <textarea id="output" spellcheck="false" readonly placeholder="Hasil akan muncul di sini..."></textarea>
   <div class="controls">
    <button class="btn" id="copy" disabled>COPY</button>
@@ -139,7 +139,7 @@ function compressLuau(src) {
 }
 
 
-// DUTZ STUDIO V4 — wrapper Luau + encoding literal string sederhana.
+// DUTZ STUDIO V3 — wrapper Luau + encoding literal string sederhana.
 // Ini obfuscation ringan berbasis browser, bukan engine Luraph atau VM.
 // Identifier API/property tidak diubah agar kompatibilitas Luau lebih terjaga.
 function obfuscateLuau(src) {
@@ -284,124 +284,73 @@ function formatLuau(src) {
   add(v,needsSpace);prev=t;
  }
  flush();
-
- // Beri jarak antar blok tingkat atas agar tampil seperti source Luau biasa.
- const spaced=[];
- for (let idx=0; idx<lines.length; idx++) {
-  const current=lines[idx];
-  const previous=spaced.length ? spaced[spaced.length-1] : '';
-  const topLevel = !/^\s/.test(current);
-  const startsBlock = /^(local\s+(function|[A-Za-z_])|function\s|if\s|for\s|while\s|repeat\b)/.test(current);
-  const afterTopEnd = previous === 'end' || previous === 'until' || previous.endsWith('end');
-  if (topLevel && spaced.length && (startsBlock || afterTopEnd) && previous !== '') spaced.push('');
-  spaced.push(current);
- }
- return spaced.join('\\n').replace(/\n{3,}/g,'\n\n');
+ return lines.join('\n');
 }
 
-// Best-effort deobfuscator V4: membuka pola yang dikenali dan tetap
+// Best-effort deobfuscator: membuka pola yang dikenali dan tetap
 // mengeluarkan source jika formatnya tidak dikenal / hanya terbuka sebagian.
 function deobfuscateLuau(src) {
  let output = String(src || '');
  let decodedCount = 0;
  const aliases = new Set();
 
- // Ulangi pembukaan wrapper sederhana beberapa lapis. Scanner mencari `end`
- // penutup fungsi tingkat teratas tanpa menganggap kata di dalam string sebagai kode.
- function unwrapOne(text) {
-  const head = text.match(/^\s*return\s*\(\s*function\s*\([^)]*\)\s*/i);
-  if (!head) return text;
-  let i = head[0].length, depth = 1, quote = '', longClose = null;
-  while (i < text.length) {
-   if (longClose) {
-    if (text.startsWith(longClose, i)) { i += longClose.length; longClose = null; continue; }
-    i++; continue;
-   }
-   const c = text[i], n = text[i+1];
-   if (quote) { if (c === '\\') { i += 2; continue; } if (c === quote) quote = ''; i++; continue; }
-   if (c === '"' || c === "'") { quote = c; i++; continue; }
-   if (c === '-' && n === '-') {
-    let j=i+2, eq=0;
-    if (text[j] === '[') { j++; while (text[j] === '=') {eq++;j++;} if (text[j] === '[') { longClose=']'+'='.repeat(eq)+']'; i=j+1; continue; } }
-    while (i<text.length && text[i] !== '\n') i++;
-    continue;
-   }
-   if (c === '[') { let j=i+1,eq=0; while(text[j]==='='){eq++;j++;} if(text[j]==='['){longClose=']'+'='.repeat(eq)+']';i=j+1;continue;} }
-   if (/[A-Za-z_]/.test(c)) {
-    let j=i+1; while(j<text.length && /[A-Za-z0-9_]/.test(text[j]))j++;
-    const word=text.slice(i,j);
-    if (word==='function' || word==='if' || word==='do' || word==='repeat') depth++;
-    else if (word==='end' || word==='until') depth--;
-    if (depth===0) {
-     let tail=text.slice(j);
-     if (/^\s*\)\s*\([\s\S]*\)\s*;?\s*$/.test(tail)) return text.slice(head[0].length,j);
-     return text;
-    }
-    i=j; continue;
-   }
-   i++;
-  }
-  return text;
- }
- for (let layer=0; layer<8; layer++) {
-  const unwrapped=unwrapOne(output);
-  if (unwrapped===output) break;
-  output=unwrapped;
+ // Buka wrapper umum `return(function(...) ... end)(...)`.
+ // Ini menghapus lapisan pembungkus saja; isi VM/enkripsi di dalamnya
+ // tetap memerlukan decoder khusus dan tidak otomatis menjadi source asli.
+ const wrapperPattern = /^\s*return\s*\(\s*function\s*\([^)]*\)\s*([\s\S]*)\bend\s*\)\s*\([\s\S]*\)\s*;?\s*$/i;
+ const wrapperMatch = output.match(wrapperPattern);
+ if (wrapperMatch) {
+  output = wrapperMatch[1];
  }
 
- // Kenali alias langsung dan alias lokal umum untuk fungsi byte/char.
- let m;
- const aliasPatterns = [
-  /\blocal\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*string\s*\.\s*char\b/g,
-  /\blocal\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*string\s*\.\s*byte\b/g
- ];
- for (const re of aliasPatterns) while ((m=re.exec(output))!==null) aliases.add(m[1]);
+ // Kenali alias yang diarahkan ke string.char, termasuk variasi spasi.
+ const aliasPattern = /\blocal\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*string\s*\.\s*char\b/g;
+ let match;
+ while ((match = aliasPattern.exec(output)) !== null) aliases.add(match[1]);
 
- // Dekode string.char(angka, ...) dan alias char yang argumennya literal byte.
- const escapeRegExp = value => value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
- const charNames=['string\\s*\\.\\s*char',...Array.from(aliases).map(escapeRegExp)];
- for (const name of charNames) {
-  const re=new RegExp('(?:'+name+')\\s*\\(\\s*(\\d+(?:\\s*,\\s*\\d+)*)\\s*\\)','g');
-  output=output.replace(re,(whole,nums)=>{
-   const values=nums.split(',').map(x=>Number(x.trim()));
-   if(!values.length || values.some(x=>!Number.isInteger(x)||x<0||x>255)) return whole;
+ // Hilangkan deklarasi alias yang dikenali, tanpa menghapus deklarasi lain.
+ output = output.replace(/\blocal\s+[A-Za-z_][A-Za-z0-9_]*\s*=\s*string\s*\.\s*char\s*;?/g, '');
+
+ // Decode pemanggilan string.char(...) dan alias(...), selama semua argumen
+ // berupa byte desimal yang valid. Pola yang tidak dikenal dibiarkan utuh.
+ const names = ['string\\s*\\.\\s*char', ...Array.from(aliases).map(name => name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&'))];
+ for (const name of names) {
+  const call = new RegExp('(?:' + name + ')\\s*\\(\\s*(\\d+(?:\\s*,\\s*\\d+)*)\\s*\\)', 'g');
+  output = output.replace(call, (whole, numbers) => {
+   const codes = numbers.split(',').map(v => Number(v.trim()));
+   if (!codes.length || codes.some(n => !Number.isInteger(n) || n < 0 || n > 255)) return whole;
    decodedCount++;
-   return '"'+values.map(x=>String.fromCharCode(x)).join('').replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r').replace(/\t/g,'\\t')+'"';
+   const value = codes.map(n => String.fromCharCode(n)).join('');
+   return '"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
   });
  }
 
- // Decode escape numerik/hex dalam literal saja; tidak pernah menjalankan source asing.
- function decodeLiteral(literal) {
-  const q=literal[0];
-  if ((q!=='"' && q!=="'") || literal[literal.length-1]!==q) return literal;
-  const inner=literal.slice(1,-1);
-  const decoded=inner.replace(/\\(\d{1,3})|\\x([0-9a-fA-F]{2})/g,(whole,dec,hex)=>{
-   const code=dec!==undefined?Number(dec):parseInt(hex,16);
-   if(!Number.isInteger(code)||code<0||code>255)return whole;
+ // Buka escape byte desimal Lua di dalam string, misalnya "\\072\\105".
+ output = output.replace(/(['"])(?:(?!\1)[^\\]|\\.)*\1/g, literal => {
+  const decoded = literal.replace(/\\(\d{1,3})/g, (whole, digits) => {
+   const code = Number(digits);
+   if (code > 255) return whole;
    decodedCount++;
    return String.fromCharCode(code);
   });
-  return q+decoded.replace(/\\/g,'\\\\').replace(new RegExp(q,'g'),'\\'+q)+q;
- }
- // Beberapa obfuscator menumpuk escape lebih dari satu lapisan.
- for(let pass=0;pass<4;pass++) {
-  const before=output;
-  output=output.replace(/(['"])(?:\\.|(?!\\1)[^\\])*?\1/g,decodeLiteral);
-  if(output===before) break;
- }
+  return decoded;
+ });
 
- // Hapus hanya wrapper IIFE yang dikenali; jangan evaluasi kode dari sumber luar.
- // Pertahankan deklarasi decoder di body agar hasil parsial tetap bisa dianalisis.
- try { return formatLuau(output); } catch (error) { return output; }
+ // Hasil tetap ditampilkan walaupun tidak ada pola yang berhasil dibongkar.
+ // Formatter hanya merapikan tampilan; ia bukan parser/decompiler penuh Luau.
+ try {
+  return formatLuau(output);
+ } catch (error) {
+  return output;
 }
-
+}
 $('obfuscate').addEventListener('click',()=>{
  const src=$('source').value;
  if(!src.trim()){$('status').textContent='Masukkan source code terlebih dahulu.';return;}
  try{
   $('output').value=obfuscateLuau(src);
   $('copy').disabled=false;$('download').disabled=false;
-  $('status').textContent='Obfuscation selesai (V4): wrapper return(function(...)) dan encoding string sederhana. Ini bukan engine Luraph/VM; uji hasilnya di Roblox Studio.';
+  $('status').textContent='Obfuscation selesai: wrapper return(function(...)) dan encoding string sederhana. Ini bukan engine Luraph/VM; uji hasilnya di Roblox Studio.';
  }catch(e){$('status').textContent='Gagal: '+e.message;}
 });
 $('deobfuscate').addEventListener('click',()=>{
@@ -410,7 +359,7 @@ $('deobfuscate').addEventListener('click',()=>{
  try{
   $('output').value=deobfuscateLuau(src);
   $('copy').disabled=false;$('download').disabled=false;
-  $('status').textContent='V4 selesai (best effort). Hasil diformat seperti source Luau biasa; escape angka/hex dan pola decoder sederhana dicoba dibuka. VM/enkripsi khusus mungkin tetap tidak dapat dipulihkan.';
+  $('status').textContent='Selesai (best effort). Wrapper return(function(...)) dan pola string yang dikenali sudah dibuka; VM atau enkripsi khusus mungkin tetap tersisa.';
  }catch(e){$('status').textContent='Gagal: '+e.message;}
 });
 $('clear').addEventListener('click',()=>{
