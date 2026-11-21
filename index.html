@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DUTZ STUDIO V7 — Luau Obfuscator &amp; Deobfuscator</title>
+<title>DUTZ STUDIO V1 — Obfuscator & Deobfuscator</title>
 <style>
 :root{color-scheme:dark;--bg:#09090d;--panel:#15151f;--line:#303044;--muted:#aaaabe;--white:#f5f5fa;--accent:#8b5cf6;--accent2:#6d28d9}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#292044 0,transparent 48%),var(--bg);color:var(--white);font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif}
@@ -18,29 +18,29 @@ textarea{width:100%;min-height:360px;resize:vertical;background:#090910;border:1
 <div class="wrap">
 <header class="brand">
  <h1>DUTZ STUDIO</h1>
- <p>LUAU SCRIPT TOOL • V7</p>
+ <p>OBFUSCATOR & DEOBFUSCATOR • V1</p>
 </header>
 <div class="grid">
  <section class="panel">
-  <h2>01 / SOURCE CODE</h2>
-  <p class="hint">Tempel script Luau di sini untuk diproteksi otomatis dengan Obfuscator V7 (Ekstrem VM + Flattening) atau dirapikan dengan Deobfuscator.</p>
-  <textarea id="source" spellcheck="false" placeholder="-- Tempel script Luau di sini&#10;local Players = game:GetService('Players')&#10;print('Hello Roblox!', Players.Name)"></textarea>
+  <h2>SOURCE CODE</h2>
+  <p class="hint">Tempel/Upload script di Dibawah</p>
+  <textarea id="source" spellcheck="false" placeholder=""></textarea>
   <input id="fileInput" type="file" accept=".lua,.luau,.txt,text/plain" hidden>
 
   <div class="controls">
-   <button class="btn" id="uploadFile" type="button">UPLOAD FILE .LUA / .TXT</button>
-   <button class="btn" id="obfuscate">OBFUSCATOR LUAU</button>
-   <button class="btn" id="deobfuscate">DEOBFUSCATOR LUAU</button>
+   <button class="btn" id="uploadFile" type="button">UPLOAD FILE</button>
+   <button class="btn" id="obfuscate">OBFUSCATOR</button>
+   <button class="btn" id="deobfuscate">DEOBFUSCATOR</button>
    <button class="btn secondary" id="clear">CLEAR</button>
   </div>
  </section>
  <section class="panel">
-  <h2>02 / OUTPUT LUAU</h2>
-  <p class="hint">OBFUSCATOR V7 menghasilkan kode terproteksi berlapis yang 100% kompatibel dengan Roblox Client &amp; Server tanpa memerlukan <code>loadstring</code>.</p>
-  <textarea id="output" spellcheck="false" readonly placeholder="Hasil akan muncul di sini..."></textarea>
+  <h2>OUTPUT</h2>
+  <p class="hint">Hasil OBFUSCATOR atau DEOBFUSCATOR dibawah.</p>
+  <textarea id="output" spellcheck="false" readonly placeholder=""></textarea>
   <div class="controls">
    <button class="btn" id="copy" disabled>COPY</button>
-   <button class="btn secondary" id="download" disabled>DOWNLOAD .LUA</button>
+   <button class="btn secondary" id="download" disabled>DOWNLOAD FILE</button>
   </div>
   <div class="status" id="status" aria-live="polite"></div>
  </section>
@@ -1906,7 +1906,7 @@ $('obfuscate').addEventListener('click', () => {
   $('output').value = res;
   $('copy').disabled = false;
   $('download').disabled = false;
-  $('status').textContent = `Obfuscation V7 selesai (${res.length.toLocaleString('id-ID')} karakter) • Mode: Ekstrem (VM + Flattening).`;
+  $('status').textContent = ``;
  } catch (e) {
   $('status').textContent = 'Gagal meng-obfuscate: ' + e.message;
  }
@@ -1914,7 +1914,7 @@ $('obfuscate').addEventListener('click', () => {
 
 $('deobfuscate').addEventListener('click', () => {
  const src = $('source').value;
- if (!src.trim()) { $('status').textContent = 'Masukkan kode obfuscation terlebih dahulu.'; return; }
+ if (!src.trim()) { $('status').textContent = 'Masukkan kode obfuscator terlebih dahulu.'; return; }
  try {
   const { code, stats } = deobfuscateLuau(src, {
    smartRobloxNames: true,
@@ -1923,9 +1923,9 @@ $('deobfuscate').addEventListener('click', () => {
   });
   $('output').value = code;
   $('copy').disabled = false; $('download').disabled = false;
-  let msg = `Selesai: ${stats.layers} wrapper dibuka, ${stats.strings} string didekode, ${stats.math} angka/bit32 diselesaikan, ${stats.tables} tabel dibuka, ${stats.vars} variabel distrukturisasi.`;
+  let msg = ``;
   if (stats.hasVM) {
-   msg += ' Catatan: Terdeteksi VM/State-Machine/Bytecode terenkripsi (IronBrew/Luraph/DUTZ V7) yang diproteksi secara dinamis.';
+   msg += '';
   }
   $('status').textContent = msg;
  } catch (e) { $('status').textContent = 'Gagal: ' + e.message; }
@@ -1945,7 +1945,7 @@ $('download').addEventListener('click', () => {
  const blob = new Blob([$('output').value], { type: 'application/octet-stream' });
  const url = URL.createObjectURL(blob), a = document.createElement('a');
  a.style.display = 'none';
- a.href = url; a.download = 'DUTZ_STUDIO_V7_OUTPUT.lua';
+ a.href = url; a.download = 'DUTZxSTUDIO_DEOBFUSCATOR';
  document.body.appendChild(a);
  a.click();
  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
