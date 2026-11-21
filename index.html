@@ -1937,8 +1937,8 @@ $('clear').addEventListener('click', () => {
 });
 
 $('copy').addEventListener('click', async () => {
- try { await navigator.clipboard.writeText($('output').value); $('status').textContent = 'Output berhasil disalin.'; }
- catch { $('output').select(); document.execCommand('copy'); $('status').textContent = 'Output disalin.'; }
+ try { await navigator.clipboard.writeText($('output').value); $('status').textContent = 'Berhasil disalin.'; }
+ catch { $('output').select(); document.execCommand('copy'); $('status').textContent = 'Disalin.'; }
 });
 
 $('download').addEventListener('click', () => {
