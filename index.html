@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DUTZ STUDIO V1 — Obfuscator & Deobfuscator</title>
+<title>ARULL STUDIO — Obfuscator & Deobfuscator</title>
 <style>
 :root{color-scheme:dark;--bg:#09090d;--panel:#15151f;--line:#303044;--muted:#aaaabe;--white:#f5f5fa;--accent:#8b5cf6;--accent2:#6d28d9}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#292044 0,transparent 48%),var(--bg);color:var(--white);font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif}
@@ -17,7 +17,7 @@ textarea{width:100%;min-height:360px;resize:vertical;background:#090910;border:1
 <body>
 <div class="wrap">
 <header class="brand">
- <h1>DUTZ STUDIO</h1>
+ <h1>ARULL STUDIO</h1>
  <p>OBFUSCATOR & DEOBFUSCATOR • V1</p>
 </header>
 <div class="grid">
@@ -1945,7 +1945,7 @@ $('download').addEventListener('click', () => {
  const blob = new Blob([$('output').value], { type: 'application/octet-stream' });
  const url = URL.createObjectURL(blob), a = document.createElement('a');
  a.style.display = 'none';
- a.href = url; a.download = 'DUTZxSTUDIO_DEOBFUSCATOR';
+ a.href = url; a.download = 'ARULLxSTUDIO_DEOBFUSCATOR';
  document.body.appendChild(a);
  a.click();
  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
