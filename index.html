@@ -1945,7 +1945,7 @@ $('download').addEventListener('click', () => {
  const blob = new Blob([$('output').value], { type: 'application/octet-stream' });
  const url = URL.createObjectURL(blob), a = document.createElement('a');
  a.style.display = 'none';
- a.href = url; a.download = 'ARULLxSTUDIO_DEOBFUSCATOR';
+ a.href = url; a.download = 'ARULLxSTUDIO_DEOBFUSCATOR.txt';
  document.body.appendChild(a);
  a.click();
  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
