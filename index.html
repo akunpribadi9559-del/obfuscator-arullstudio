@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ARULL STUDIO — Obfuscator & Deobfuscator</title>
+<title>ARULL STUDIO V1 — Obfuscator & Deobfuscator</title>
 <style>
 :root{color-scheme:dark;--bg:#09090d;--panel:#15151f;--line:#303044;--muted:#aaaabe;--white:#f5f5fa;--accent:#8b5cf6;--accent2:#6d28d9}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#292044 0,transparent 48%),var(--bg);color:var(--white);font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif}
@@ -40,7 +40,7 @@ textarea{width:100%;min-height:360px;resize:vertical;background:#090910;border:1
   <textarea id="output" spellcheck="false" readonly placeholder=""></textarea>
   <div class="controls">
    <button class="btn" id="copy" disabled>COPY</button>
-   <button class="btn secondary" id="downloadTxt" disabled>DOWNLOAD .TXT</button>
+   <button class="btn secondary" id="downloadTxt" disabled>DOWNLOAD FILE</button>
   </div>
   <div class="status" id="status" aria-live="polite"></div>
  </section>
@@ -2137,7 +2137,7 @@ $('copy').addEventListener('click', async () => {
 $('downloadTxt').addEventListener('click', () => {
  const content = $('output').value;
  if (!content) return;
- const filename = 'ARULLxSTUDIO_OUTPUT.txt';
+ const filename = 'ARULLxSTUDIO.txt';
  try {
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
